@@ -3,9 +3,8 @@ use std::num;
 use std::vec;
 
 fn main() {
-    for i in range(0, 31) {
-        println!("{:d}: {:?}", i, erat(i as uint));   
-        println!("{:d}: {:?}", i, atkin(i as uint));   
+    for i in range(0, 1000) {
+        assert!(erat(i as uint) == atkin(i as uint))
     }
     println("Done");
 }
@@ -22,11 +21,8 @@ pub fn atkin(limit: uint) -> ~[uint] {
     // initialize the sieve
     let mut field = vec::from_elem(limit, false);
 
-    for i in range(0, num::min(limit, 5)) {
-        field[i] = true;
-    }
-
     let limit_sqrt = num::sqrt(limit as f32).ceil() as uint;
+    let limit_inclusive = (limit - 1) as f32;
 
     // put in candidate primes: 
     // integers which have an odd number of
@@ -36,21 +32,33 @@ pub fn atkin(limit: uint) -> ~[uint] {
         let xx3 = 3*xx;
         let xx4 = 4*xx;
 
-        for y in range(1, limit_sqrt) {
+        let max_y_a = num::sqrt(limit_inclusive - num::min(limit_inclusive, xx4 as f32)) as uint;
+        let max_y_b = num::sqrt(limit_inclusive - num::min(limit_inclusive, xx3 as f32)) as uint;
+        let min_y_c = num::sqrt(num::max(1f32, (xx3 as f32) - limit_inclusive)).ceil() as uint;
+
+        for y in range(1, max_y_a+1) {
             let yy = y*y;
 
             let n = xx4 + yy;
-            if n < limit && (n % 12 == 1 || n % 12 == 5) {
+            if (n % 12 == 1 || n % 12 == 5) {
                 field[n] = !field[n];
             }
+        }
+
+        for y in range(1, max_y_b + 1) {
+            let yy = y*y;
 
             let n = xx3 + yy;
-            if n < limit && n % 12 == 7 {
+            if n % 12 == 7 {
                 field[n] = !field[n];
             }
+        }
+
+        for y in range(min_y_c, x) {
+            let yy = y*y;
 
             let n = xx3 - yy;
-            if x > y && n < limit && n % 12 == 11 {
+            if n % 12 == 11 {
                 field[n] = !field[n];
             }
         }
@@ -119,10 +127,6 @@ pub fn erat(limit: uint) -> ~[uint] {
 
         if !prime_found {
             break;
-        }
-
-        if primes.len() % 1000 == 999 {
-            println!("{:?}", primes[primes.len()-1]);   
         }
 
         // Mark multiples of the new primes as non-prime
