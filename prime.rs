@@ -1,13 +1,12 @@
+#[cfg(test)]
+extern mod extra;
+
+#[cfg(test)]
+use extra::test::BenchHarness;
+
 use std::iter::range_step;
 use std::num;
 use std::vec;
-
-fn main() {
-    for i in range(0, 1000) {
-        assert!(erat(i as uint) == atkin(i as uint))
-    }
-    println("Done");
-}
 
 pub fn atkin(limit: uint) -> ~[uint] {
     // Return early for values less than 4. 
@@ -38,29 +37,18 @@ pub fn atkin(limit: uint) -> ~[uint] {
 
         for y in range(1, max_y_a+1) {
             let yy = y*y;
-
-            let n = xx4 + yy;
-            if (n % 12 == 1 || n % 12 == 5) {
-                field[n] = !field[n];
-            }
+            func_a(field, xx4, yy);
+            func_b(field, xx3, yy);
         }
 
-        for y in range(1, max_y_b + 1) {
+        for y in range(max_y_a+1, max_y_b + 1) {
             let yy = y*y;
-
-            let n = xx3 + yy;
-            if n % 12 == 7 {
-                field[n] = !field[n];
-            }
+            func_b(field, xx3, yy);
         }
 
         for y in range(min_y_c, x) {
             let yy = y*y;
-
-            let n = xx3 - yy;
-            if n % 12 == 11 {
-                field[n] = !field[n];
-            }
+            func_c(field, xx3, yy);
         }
     }
 
@@ -91,6 +79,29 @@ pub fn atkin(limit: uint) -> ~[uint] {
     primes
 }
 
+#[inline]
+fn func_a(field: &mut [bool], xx4: uint, yy: uint) {
+    let n = xx4 + yy;
+    if (n % 12 == 1 || n % 12 == 5) {
+        field[n] = !field[n];
+    }
+}
+
+#[inline]
+fn func_b(field: &mut [bool], xx3: uint, yy: uint) {
+    let n = xx3 + yy;
+    if n % 12 == 7 {
+        field[n] = !field[n];
+    }
+}
+
+#[inline]
+fn func_c(field: &mut [bool], xx3: uint, yy: uint) {
+    let n = xx3 - yy;
+    if n % 12 == 11 {
+        field[n] = !field[n];
+    }
+}
 
 pub fn erat(limit: uint) -> ~[uint] {
     // Return early for values less than 4. 
@@ -140,7 +151,7 @@ fn mark_multiples_false(field: &mut [bool], limit: uint, prime: uint) {
     let step = if prime == 2 { 2 } else { prime * 2 };
 
     // Mark multiples of the new primes as non-prime
-    for m in range_step(prime as u64 * prime as u64, limit as u64, step as u64) {
+    for m in range_step(prime * prime, limit, step) {
         field[m] = false;
     }
 }
@@ -152,7 +163,7 @@ pub fn factors(n: uint) -> ~[uint] {
     let mut factors = ~[];
 
     loop {
-        let mut cont = false;
+        let mut factor_found = false;
         for &prime in primes.iter() {
             if remaining % prime == 0 {
                 factors.push(prime);
@@ -162,17 +173,45 @@ pub fn factors(n: uint) -> ~[uint] {
                 }
                 else {
                     remaining /= prime;
-                    cont = true;
+                    factor_found = true;
                     break;
                 }
             }
         }
 
-        if cont {
-            continue;
+        if !factor_found {
+            factors.push(remaining);
+            return factors
         }
-
-        factors.push(remaining);
-        return factors
     }
+}
+
+#[test]
+fn atkin_first_ten_primes_correct() {
+    assert_eq!(~[2, 3, 5, 7, 11, 13, 17, 19, 23, 29], atkin(30));
+}
+
+#[test]
+fn erat_first_ten_primes_correct() {
+    assert_eq!(~[2, 3, 5, 7, 11, 13, 17, 19, 23, 29], erat(30));
+}
+
+#[test]
+fn factors_test() {
+    assert_eq!(~[2, 3, 5], factors(30));
+}
+
+
+#[bench]
+fn atkin_bench(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        atkin(1000000);
+    })
+}
+
+#[bench]
+fn erat_bench(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        erat(1000000);
+    })
 }
