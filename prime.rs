@@ -17,39 +17,129 @@ pub fn atkin(limit: uint) -> ~[uint] {
         return ~[2]
     }
 
+    // if limit < 300 {
+    //     return erat(limit);
+    // }
+
     // initialize the sieve
     let mut field = vec::from_elem(limit, false);
 
-    let limit_sqrt = num::sqrt(limit as f32).ceil() as uint;
     let limit_inclusive = (limit - 1) as f32;
 
     // put in candidate primes: 
     // integers which have an odd number of
     // representations by certain quadratic forms
-    for x in range(1, limit_sqrt) {
+
+    ////////////////////////////////
+    // x values from 1 func_a_x_max.
+    ////////////////////////////////
+    let func_a_x_max = num::sqrt(limit_inclusive / 4f32).ceil() as uint;
+
+    for x in range_step(1, func_a_x_max, 6) {
         let xx = x*x;
         let xx3 = 3*xx;
         let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        let max_y_a = num::sqrt(limit_inclusive - num::min(limit_inclusive, xx4 as f32)) as uint;
-        let max_y_b = num::sqrt(limit_inclusive - num::min(limit_inclusive, xx3 as f32)) as uint;
-        let min_y_c = num::sqrt(num::max(1f32, (xx3 as f32) - limit_inclusive)).ceil() as uint;
+        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
+        func_b_odd_x(field, xx3, max_y_b);
+        func_c_odd_x(field, xx3, min_y_c, x);
+    }
 
-        for y in range(1, max_y_a+1) {
-            let yy = y*y;
-            func_a(field, xx4, yy);
-            func_b(field, xx3, yy);
-        }
+    for x in range_step(2, func_a_x_max, 6) {
+        let xx = x*x;
+        let xx3 = 3*xx;
+        let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        for y in range(max_y_a+1, max_y_b + 1) {
-            let yy = y*y;
-            func_b(field, xx3, yy);
-        }
+        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
+        func_c_even_x(field, xx3, min_y_c, x);
+    }
 
-        for y in range(min_y_c, x) {
-            let yy = y*y;
-            func_c(field, xx3, yy);
-        }
+    for x in range_step(3, func_a_x_max, 6) {
+        let xx = x*x;
+        let xx3 = 3*xx;
+        let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_a_x_divisible_by_3(field, xx4, max_y_a+1);
+        func_b_odd_x(field, xx3, max_y_b);
+        func_c_odd_x(field, xx3, min_y_c, x);
+    }
+
+    for x in range_step(4, func_a_x_max, 6) {
+        let xx = x*x;
+        let xx3 = 3*xx;
+        let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
+        func_c_even_x(field, xx3, min_y_c, x);
+    }
+
+    for x in range_step(5, func_a_x_max, 6) {
+        let xx = x*x;
+        let xx3 = 3*xx;
+        let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
+        func_b_odd_x(field, xx3, max_y_b);
+        func_c_odd_x(field, xx3, min_y_c, x);
+    }
+
+    for x in range_step(6, func_a_x_max, 6) {
+        let xx = x*x;
+        let xx3 = 3*xx;
+        let xx4 = 4*xx;
+        let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_a_x_divisible_by_3(field, xx4, max_y_a+1);
+        func_c_even_x(field, xx3, min_y_c, x);
+    }
+
+
+    //////////////////////////////////////////////
+    // x values from func_a_x_max to func_b_x_max.
+    //////////////////////////////////////////////
+    let func_b_x_max = num::sqrt(limit_inclusive / 3f32).ceil() as uint;
+
+    for x in range_step(round_to_next_odd(func_a_x_max), func_b_x_max, 2) {
+        let xx3 = 3*x*x;
+        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_b_odd_x(field, xx3, max_y_b);
+        func_c_odd_x(field, xx3, min_y_c, x);
+    }
+
+
+    ////////////////////////////////////////////
+    // x values from func_a_x_max to limit_sqrt.
+    ////////////////////////////////////////////
+    let limit_sqrt = num::sqrt(limit as f32).ceil() as uint;
+
+    for x in range_step(round_to_next_odd(func_b_x_max), limit_sqrt, 2) {
+        let xx3 = 3*x*x;
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_c_odd_x(field, xx3, min_y_c, x);
+    }
+
+    for x in range_step(round_to_next_even(func_a_x_max), limit_sqrt, 2) {
+        let xx3 = 3*x*x;
+        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
+
+        func_c_even_x(field, xx3, min_y_c, x);
     }
 
 
@@ -79,27 +169,142 @@ pub fn atkin(limit: uint) -> ~[uint] {
     primes
 }
 
+// Rounds up n to the nearest even number.
+// Returns n   if n%2 == 0
+// Returns n+1 if n%2 == 1
+fn round_to_next_even(n: uint) -> uint {
+    if n%2 == 0 {n} else {n+1}
+}
+
+// Rounds up n to the nearest even number.
+// Returns n+1 if n%2 == 0
+// Returns n   if n%2 == 1
+fn round_to_next_odd(n: uint) -> uint {
+    if n%2 == 1 {n} else {n+1}
+}
+
+// The largest value of y, where n = 4x^2 + y^2 is less than the limit.
 #[inline]
-fn func_a(field: &mut [bool], xx4: uint, yy: uint) {
+fn max_y_for_func_a(limit_inclusive: f32, xx4: uint) -> uint {
+    num::sqrt(limit_inclusive - num::min(limit_inclusive, xx4 as f32)) as uint
+}
+
+// The largest value of y, where n = 3x^2 + y^2 is less than the limit.
+#[inline]
+fn max_y_for_func_b(limit_inclusive: f32, xx3: uint) -> uint {
+    num::sqrt(limit_inclusive - num::min(limit_inclusive, xx3 as f32)) as uint
+}
+
+// The smallest value of y, where n = 3x^2 - y^2 is less than the limit.
+#[inline]
+fn min_y_for_func_c(limit_inclusive: f32, xx3: uint) -> uint {
+    num::sqrt(num::max(1f32, (xx3 as f32) - limit_inclusive as f32)).ceil() as uint
+}
+
+// Toggles solutions of n = 4x^2 + y^2.
+// n must always satisfy n%12 = 1 or n%12 = 5
+#[inline]
+fn func_a(field: &mut [bool], xx4: uint, y: uint) {
+    let yy = y*y;
     let n = xx4 + yy;
-    if (n % 12 == 1 || n % 12 == 5) {
-        field[n] = !field[n];
-    }
+    field[n] = !field[n];
 }
 
+// Toggles solutions of n = 3x^2 + y^2.
+// n must always satisfy n%12 = 7
 #[inline]
-fn func_b(field: &mut [bool], xx3: uint, yy: uint) {
+fn func_b(field: &mut [bool], xx3: uint, y: uint) {
+    let yy = y*y;
     let n = xx3 + yy;
-    if n % 12 == 7 {
-        field[n] = !field[n];
+    field[n] = !field[n];
+}
+
+// Toggles solutions of n = 3x^2 - y^2.
+// n must always satisfy n%12 = 11
+#[inline]
+fn func_c(field: &mut [bool], xx3: uint, y: uint) {
+    let yy = y*y;
+    let n = xx3 - yy;
+    field[n] = !field[n];
+}
+
+// Toggles all solutions of 4x^2 + y^2 where x is not divisible by 3 and y is odd.
+// For all x where x%3 != 0, (4xx)%12 = 4
+// For all y where y%2 == 1, (yy)%12 = 1 or 9
+// Therefore, with the above restrictions, (4xx + yy)%12 will always be either
+// (4+1)%12 = 5 or (4+9)%12 = 1
+#[inline]
+fn func_a_x_not_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
+    for y in range_step(1, max_y, 2) {
+        func_a(field, xx4, y);
     }
 }
 
+// Toggles all solutions of 4x^2 + y^2 where x is divisible by 3 and y is odd and not
+// divisible by three.
+// For all x where x%3 == 0, (4xx)%12 = 0
+// For all y where y%2 == 1 and y%3 != 0, (yy)%12 = 1
+// Therefore, with the above restrictions, (4xx + yy)%12 will always be (0+1)%12 = 1
 #[inline]
-fn func_c(field: &mut [bool], xx3: uint, yy: uint) {
-    let n = xx3 - yy;
-    if n % 12 == 11 {
-        field[n] = !field[n];
+fn func_a_x_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
+    for y in range_step(1, max_y, 6) {
+        func_a(field, xx4, y);
+    }
+    for y in range_step(5, max_y, 6) {
+        func_a(field, xx4, y);
+    }
+}
+
+// Toggles all solutions of 3x^2 + y^2 where x is odd and y is even and not
+// divisible by three.
+// For all x where x%2 == 1, (3xx)%12 = 3
+// For all y where y%2 == 0 and y%3 != 0, (yy)%12 = 4
+// Therefore, with the above restrictions, (3xx + yy)%12 will always be (3+4)%12 = 7
+#[inline]
+fn func_b_odd_x(field: &mut [bool], xx3: uint, max_y: uint) {
+    for y in range_step(2, max_y + 1, 6) {
+        func_b(field, xx3, y);
+    }
+
+    for y in range_step(4, max_y + 1, 6) {
+        func_b(field, xx3, y);
+    }
+}
+
+// Toggles all solutions of 3x^2 - y^2 where x is even and y is odd and not
+// divisible by three.
+// For all x where x%2 == 0, (3xx)%12 = 0
+// For all y where y%2 == 1 and y%3 != 0, (yy)%12 = 1
+// Therefore, with the above restrictions, (3xx - yy)%12 will always be (0-1)%12 = 11
+#[inline]
+fn func_c_even_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
+    let next_mod_6_r_1 = min_y + ((7 - (min_y % 6)) % 6);
+    let next_mod_6_r_5 = min_y + ((11 - (min_y % 6)) % 6);
+
+    for y in range_step(next_mod_6_r_1, max_y + 1, 6) {
+        func_c(field, xx3, y);
+    }
+    for y in range_step(next_mod_6_r_5, max_y + 1, 6) {
+        func_c(field, xx3, y);
+    }
+}
+
+// Toggles all solutions of 3x^2 - y^2 where x is odd and y is even and not
+// divisible by three.
+// For all x where x%2 == 1, (3xx)%12 = 3
+// For all y where y%2 == 0 and y%3 != 0, (yy)%12 = 4
+// Therefore, with the above restrictions, (3xx - yy)%12 will always be (3-4)%12 = 11
+#[inline]
+fn func_c_odd_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
+    let next_mod_6_r_2 = min_y + ((8 - (min_y % 6)) % 6);
+    let next_mod_6_r_4 = min_y + ((10 - (min_y % 6)) % 6);
+
+    for y in range_step(next_mod_6_r_2, max_y + 1, 6) {
+        func_c(field, xx3, y);
+    }
+
+    for y in range_step(next_mod_6_r_4, max_y + 1, 6) {
+        func_c(field, xx3, y);
     }
 }
 
@@ -197,21 +402,84 @@ fn erat_first_ten_primes_correct() {
 }
 
 #[test]
+fn compare_erat_and_atkin() {
+    for n in range(0, 1000) {
+        let n = n as uint;
+        assert_eq!(atkin(n), erat(n));
+    }
+}
+
+#[test]
 fn factors_test() {
     assert_eq!(~[2, 3, 5], factors(30));
 }
 
-
 #[bench]
-fn atkin_bench(bh: &mut BenchHarness) {
+fn atkin_bench_1000000(bh: &mut BenchHarness) {
     bh.iter(|| {
         atkin(1000000);
     })
 }
 
 #[bench]
-fn erat_bench(bh: &mut BenchHarness) {
+fn erat_bench_1000000(bh: &mut BenchHarness) {
     bh.iter(|| {
         erat(1000000);
+    })
+}
+
+#[bench]
+fn atkin_bench_100000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        atkin(100000);
+    })
+}
+
+#[bench]
+fn erat_bench_100000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        erat(100000);
+    })
+}
+
+#[bench]
+fn atkin_bench_10000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        atkin(10000);
+    })
+}
+
+#[bench]
+fn erat_bench_10000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        erat(10000);
+    })
+}
+
+#[bench]
+fn atkin_bench_1000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        atkin(1000);
+    })
+}
+
+#[bench]
+fn erat_bench_1000(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        erat(1000);
+    })
+}
+
+#[bench]
+fn atkin_bench_100(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        atkin(100);
+    })
+}
+
+#[bench]
+fn erat_bench_100(bh: &mut BenchHarness) {
+    bh.iter(|| {
+        erat(100);
     })
 }
