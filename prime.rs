@@ -1,20 +1,18 @@
-#[cfg(test)]
-extern mod extra;
-
-#[cfg(test)]
-use extra::test::BenchHarness;
+#![cfg(test)]
+extern crate test;
+use test::Bencher;
 
 use std::iter::range_step;
-use std::num;
-use std::vec;
 
-pub fn atkin(limit: uint) -> ~[uint] {
+pub fn atkin(limit: uint) -> Vec<uint> {
     // Return early for values less than 4. 
     if limit <= 2 {
-        return ~[]
+        return Vec::new();
     }
     if limit <= 3 {
-        return ~[2]
+        let mut primes = Vec::new();
+        primes.push(2);
+        return primes
     }
 
     // if limit < 300 {
@@ -22,7 +20,8 @@ pub fn atkin(limit: uint) -> ~[uint] {
     // }
 
     // initialize the sieve
-    let mut field = vec::from_elem(limit, false);
+    let mut fixed_field = Vec::from_elem(limit, false);
+    let field = fixed_field.as_mut_slice();
 
     let limit_inclusive = (limit - 1) as f32;
 
@@ -33,7 +32,7 @@ pub fn atkin(limit: uint) -> ~[uint] {
     ////////////////////////////////
     // x values from 1 func_a_x_max.
     ////////////////////////////////
-    let func_a_x_max = num::sqrt(limit_inclusive / 4f32).ceil() as uint;
+    let func_a_x_max = (limit_inclusive / 4f32).sqrt().ceil() as uint;
 
     for x in range_step(1, func_a_x_max, 6) {
         let xx = x*x;
@@ -111,7 +110,7 @@ pub fn atkin(limit: uint) -> ~[uint] {
     //////////////////////////////////////////////
     // x values from func_a_x_max to func_b_x_max.
     //////////////////////////////////////////////
-    let func_b_x_max = num::sqrt(limit_inclusive / 3f32).ceil() as uint;
+    let func_b_x_max = (limit_inclusive / 3f32).sqrt().ceil() as uint;
 
     for x in range_step(round_to_next_odd(func_a_x_max), func_b_x_max, 2) {
         let xx3 = 3*x*x;
@@ -126,7 +125,7 @@ pub fn atkin(limit: uint) -> ~[uint] {
     ////////////////////////////////////////////
     // x values from func_a_x_max to limit_sqrt.
     ////////////////////////////////////////////
-    let limit_sqrt = num::sqrt(limit as f32).ceil() as uint;
+    let limit_sqrt = (limit as f32).sqrt().ceil() as uint;
 
     for x in range_step(round_to_next_odd(func_b_x_max), limit_sqrt, 2) {
         let xx3 = 3*x*x;
@@ -157,7 +156,9 @@ pub fn atkin(limit: uint) -> ~[uint] {
         }
     }
 
-    let mut primes = ~[2, 3];
+    let mut primes = Vec::new();
+    primes.push(2);
+    primes.push(3);
     for n in range(5, limit) {
         if !field[n] {
             continue;
@@ -186,19 +187,29 @@ fn round_to_next_odd(n: uint) -> uint {
 // The largest value of y, where n = 4x^2 + y^2 is less than the limit.
 #[inline]
 fn max_y_for_func_a(limit_inclusive: f32, xx4: uint) -> uint {
-    num::sqrt(limit_inclusive - num::min(limit_inclusive, xx4 as f32)) as uint
+    sqrt(limit_inclusive - min(limit_inclusive, xx4 as f32)) as uint
 }
 
 // The largest value of y, where n = 3x^2 + y^2 is less than the limit.
 #[inline]
 fn max_y_for_func_b(limit_inclusive: f32, xx3: uint) -> uint {
-    num::sqrt(limit_inclusive - num::min(limit_inclusive, xx3 as f32)) as uint
+    sqrt(limit_inclusive - min(limit_inclusive, xx3 as f32)) as uint
 }
 
 // The smallest value of y, where n = 3x^2 - y^2 is less than the limit.
 #[inline]
 fn min_y_for_func_c(limit_inclusive: f32, xx3: uint) -> uint {
-    num::sqrt(num::max(1f32, (xx3 as f32) - limit_inclusive as f32)).ceil() as uint
+    sqrt(max(1f32, (xx3 as f32) - limit_inclusive as f32)).ceil() as uint
+}
+
+fn sqrt(a: f32) -> f32 {
+    a.sqrt()
+}
+fn min(a: f32, b: f32) -> f32 {
+    a.min(b)
+}
+fn max(a: f32, b: f32) -> f32 {
+    a.max(b)
 }
 
 // Toggles solutions of n = 4x^2 + y^2.
@@ -308,17 +319,20 @@ fn func_c_odd_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
     }
 }
 
-pub fn erat(limit: uint) -> ~[uint] {
+pub fn erat(limit: uint) -> Vec<uint> {
     // Return early for values less than 4. 
     if limit <= 2 {
-        return ~[]
+        return Vec::new();
     }
     if limit <= 3 {
-        return ~[2]
+        let mut primes = Vec::new();
+        primes.push(2);
+        return primes
     }
 
     // Create a vector of 'true' values, one for each number up to limit, exclusive.
-    let mut field = vec::from_elem(limit, true);
+    let mut fixed_field = Vec::from_elem(limit, true);
+    let field = fixed_field.as_mut_slice();
 
     // Set all even numbers (apart from 2) to false. Strictly, 0 and 1 should be false
     // also, but the loop ignores everything below index 3 so it doesn't matter.
@@ -326,14 +340,16 @@ pub fn erat(limit: uint) -> ~[uint] {
     mark_multiples_false(field, limit, 3);
 
     // List of primes found.
-    let mut primes = ~[2, 3];
-    let mut last_prime = primes[primes.len()-1];
+    let mut primes = Vec::new();
+    primes.push(2);
+    primes.push(3);
+    let mut last_prime = 3;
 
     loop {
         let mut prime_found = false;
 
         for i in range_step(last_prime+2, limit, 2) {
-            if (field[i]) {
+            if field[i] {
                 primes.push(i);
                 last_prime = i;
                 prime_found = true;
@@ -361,11 +377,11 @@ fn mark_multiples_false(field: &mut [bool], limit: uint, prime: uint) {
     }
 }
 
-pub fn factors(n: uint) -> ~[uint] {
-    let primes = atkin(num::sqrt(n as f32) as uint);
+pub fn factors(n: uint) -> Vec<uint> {
+    let primes = atkin((n as f32).sqrt() as uint);
 
     let mut remaining = n;
-    let mut factors = ~[];
+    let mut factors = Vec::new();
 
     loop {
         let mut factor_found = false;
@@ -393,12 +409,12 @@ pub fn factors(n: uint) -> ~[uint] {
 
 #[test]
 fn atkin_first_ten_primes_correct() {
-    assert_eq!(~[2, 3, 5, 7, 11, 13, 17, 19, 23, 29], atkin(30));
+    assert_eq!(vec!(2, 3, 5, 7, 11, 13, 17, 19, 23, 29), atkin(30));
 }
 
 #[test]
 fn erat_first_ten_primes_correct() {
-    assert_eq!(~[2, 3, 5, 7, 11, 13, 17, 19, 23, 29], erat(30));
+    assert_eq!(vec!(2, 3, 5, 7, 11, 13, 17, 19, 23, 29), erat(30));
 }
 
 #[test]
@@ -411,74 +427,74 @@ fn compare_erat_and_atkin() {
 
 #[test]
 fn factors_test() {
-    assert_eq!(~[2, 3, 5], factors(30));
+    assert_eq!(vec!(2, 3, 5), factors(30));
 }
 
 #[bench]
-fn atkin_bench_1000000(bh: &mut BenchHarness) {
+fn atkin_bench_1000000(bh: &mut Bencher) {
     bh.iter(|| {
         atkin(1000000);
     })
 }
 
 #[bench]
-fn erat_bench_1000000(bh: &mut BenchHarness) {
+fn erat_bench_1000000(bh: &mut Bencher) {
     bh.iter(|| {
         erat(1000000);
     })
 }
 
 #[bench]
-fn atkin_bench_100000(bh: &mut BenchHarness) {
+fn atkin_bench_100000(bh: &mut Bencher) {
     bh.iter(|| {
         atkin(100000);
     })
 }
 
 #[bench]
-fn erat_bench_100000(bh: &mut BenchHarness) {
+fn erat_bench_100000(bh: &mut Bencher) {
     bh.iter(|| {
         erat(100000);
     })
 }
 
 #[bench]
-fn atkin_bench_10000(bh: &mut BenchHarness) {
+fn atkin_bench_10000(bh: &mut Bencher) {
     bh.iter(|| {
         atkin(10000);
     })
 }
 
 #[bench]
-fn erat_bench_10000(bh: &mut BenchHarness) {
+fn erat_bench_10000(bh: &mut Bencher) {
     bh.iter(|| {
         erat(10000);
     })
 }
 
 #[bench]
-fn atkin_bench_1000(bh: &mut BenchHarness) {
+fn atkin_bench_1000(bh: &mut Bencher) {
     bh.iter(|| {
         atkin(1000);
     })
 }
 
 #[bench]
-fn erat_bench_1000(bh: &mut BenchHarness) {
+fn erat_bench_1000(bh: &mut Bencher) {
     bh.iter(|| {
         erat(1000);
     })
 }
 
 #[bench]
-fn atkin_bench_100(bh: &mut BenchHarness) {
+fn atkin_bench_100(bh: &mut Bencher) {
     bh.iter(|| {
         atkin(100);
     })
 }
 
 #[bench]
-fn erat_bench_100(bh: &mut BenchHarness) {
+fn erat_bench_100(bh: &mut Bencher) {
     bh.iter(|| {
         erat(100);
     })
