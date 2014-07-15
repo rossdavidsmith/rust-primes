@@ -185,20 +185,23 @@ fn round_to_next_odd(n: uint) -> uint {
 
 // The largest value of y, where n = 4x^2 + y^2 is less than the limit.
 #[inline]
-fn max_y_for_func_a(limit_inclusive: f32, xx4: uint) -> uint {
-    sqrt(limit_inclusive - min(limit_inclusive, xx4 as f32)) as uint
+fn max_y_for_func_a(max_n: f32, xx4: uint) -> uint {
+    // max_y = sqrt(max_n - min(max_n, 4x^2)
+    sqrt(max_n - min(max_n, xx4 as f32)) as uint
 }
 
 // The largest value of y, where n = 3x^2 + y^2 is less than the limit.
 #[inline]
-fn max_y_for_func_b(limit_inclusive: f32, xx3: uint) -> uint {
-    sqrt(limit_inclusive - min(limit_inclusive, xx3 as f32)) as uint
+fn max_y_for_func_b(max_n: f32, xx3: uint) -> uint {
+    // max_y = sqrt(max_n - min(max_n, 3x^2)
+    sqrt(max_n - min(max_n, xx3 as f32)) as uint
 }
 
 // The smallest value of y, where n = 3x^2 - y^2 is less than the limit.
 #[inline]
-fn min_y_for_func_c(limit_inclusive: f32, xx3: uint) -> uint {
-    sqrt(max(1f32, (xx3 as f32) - limit_inclusive as f32)).ceil() as uint
+fn min_y_for_func_c(max_n: f32, xx3: uint) -> uint {
+    // min_y = sqrt(max(1, 3x^2 - max_n))
+    sqrt(max(1f32, (xx3 as f32) - max_n as f32)).ceil() as uint
 }
 
 fn sqrt(a: f32) -> f32 {
