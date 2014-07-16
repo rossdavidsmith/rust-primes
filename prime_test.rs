@@ -15,7 +15,7 @@ fn erat_first_ten_primes_correct() {
 
 #[test]
 fn compare_erat_and_atkin() {
-    for n in range(0, 1000) {
+    for n in range(0u, 1000) {
         let n = n as uint;
         assert_eq!(atkin(n), erat(n));
     }
