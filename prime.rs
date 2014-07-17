@@ -1,6 +1,8 @@
 #![crate_id = "primes#0.1"]
 #![crate_type = "lib"]
 
+extern crate collections;
+use collections::bitv::Bitv;
 use std::iter::range_step;
 
 pub fn atkin(limit: uint) -> Vec<uint> {
@@ -19,9 +21,7 @@ pub fn atkin(limit: uint) -> Vec<uint> {
     // }
 
     // initialize the sieve
-    let mut fixed_field = Vec::from_elem(limit, false);
-    let field = fixed_field.as_mut_slice();
-
+    let mut field = Bitv::new(limit, false);
     let limit_inclusive = (limit - 1) as f32;
 
     // put in candidate primes: 
@@ -41,9 +41,9 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
-        func_b_odd_x(field, xx3, max_y_b);
-        func_c_odd_x(field, xx3, min_y_c, x);
+        func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_b_odd_x(&mut field, xx3, max_y_b);
+        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(2, func_a_x_max, 6) {
@@ -53,8 +53,8 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
-        func_c_even_x(field, xx3, min_y_c, x);
+        func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(3, func_a_x_max, 6) {
@@ -65,9 +65,9 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_divisible_by_3(field, xx4, max_y_a+1);
-        func_b_odd_x(field, xx3, max_y_b);
-        func_c_odd_x(field, xx3, min_y_c, x);
+        func_a_x_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_b_odd_x(&mut field, xx3, max_y_b);
+        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(4, func_a_x_max, 6) {
@@ -77,8 +77,8 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
-        func_c_even_x(field, xx3, min_y_c, x);
+        func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(5, func_a_x_max, 6) {
@@ -89,9 +89,9 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_not_divisible_by_3(field, xx4, max_y_a+1);
-        func_b_odd_x(field, xx3, max_y_b);
-        func_c_odd_x(field, xx3, min_y_c, x);
+        func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_b_odd_x(&mut field, xx3, max_y_b);
+        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(6, func_a_x_max, 6) {
@@ -101,8 +101,8 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_a_x_divisible_by_3(field, xx4, max_y_a+1);
-        func_c_even_x(field, xx3, min_y_c, x);
+        func_a_x_divisible_by_3(&mut field, xx4, max_y_a+1);
+        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
 
@@ -116,8 +116,8 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_b_odd_x(field, xx3, max_y_b);
-        func_c_odd_x(field, xx3, min_y_c, x);
+        func_b_odd_x(&mut field, xx3, max_y_b);
+        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
 
@@ -130,14 +130,14 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         let xx3 = 3*x*x;
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_c_odd_x(field, xx3, min_y_c, x);
+        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
     for x in range_step(round_to_next_even(func_a_x_max), limit_sqrt, 2) {
         let xx3 = 3*x*x;
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
-        func_c_even_x(field, xx3, min_y_c, x);
+        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
 
@@ -217,7 +217,7 @@ fn max(a: f32, b: f32) -> f32 {
 // Toggles solutions of n = 4x^2 + y^2.
 // n must always satisfy n%12 = 1 or n%12 = 5
 #[inline]
-fn func_a(field: &mut [bool], xx4: uint, y: uint) {
+fn func_a(field: &mut Bitv, xx4: uint, y: uint) {
     let yy = y*y;
     let n = xx4 + yy;
     field[n] = !field[n];
@@ -226,7 +226,7 @@ fn func_a(field: &mut [bool], xx4: uint, y: uint) {
 // Toggles solutions of n = 3x^2 + y^2.
 // n must always satisfy n%12 = 7
 #[inline]
-fn func_b(field: &mut [bool], xx3: uint, y: uint) {
+fn func_b(field: &mut Bitv, xx3: uint, y: uint) {
     let yy = y*y;
     let n = xx3 + yy;
     field[n] = !field[n];
@@ -235,7 +235,7 @@ fn func_b(field: &mut [bool], xx3: uint, y: uint) {
 // Toggles solutions of n = 3x^2 - y^2.
 // n must always satisfy n%12 = 11
 #[inline]
-fn func_c(field: &mut [bool], xx3: uint, y: uint) {
+fn func_c(field: &mut Bitv, xx3: uint, y: uint) {
     let yy = y*y;
     let n = xx3 - yy;
     field[n] = !field[n];
@@ -247,7 +247,7 @@ fn func_c(field: &mut [bool], xx3: uint, y: uint) {
 // Therefore, with the above restrictions, (4xx + yy)%12 will always be either
 // (4+1)%12 = 5 or (4+9)%12 = 1
 #[inline]
-fn func_a_x_not_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
+fn func_a_x_not_divisible_by_3(field: &mut Bitv, xx4: uint, max_y: uint) {
     for y in range_step(1, max_y, 2) {
         func_a(field, xx4, y);
     }
@@ -259,7 +259,7 @@ fn func_a_x_not_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
 // For all y where y%2 == 1 and y%3 != 0, (yy)%12 = 1
 // Therefore, with the above restrictions, (4xx + yy)%12 will always be (0+1)%12 = 1
 #[inline]
-fn func_a_x_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
+fn func_a_x_divisible_by_3(field: &mut Bitv, xx4: uint, max_y: uint) {
     for y in range_step(1, max_y, 6) {
         func_a(field, xx4, y);
     }
@@ -274,7 +274,7 @@ fn func_a_x_divisible_by_3(field: &mut [bool], xx4: uint, max_y: uint) {
 // For all y where y%2 == 0 and y%3 != 0, (yy)%12 = 4
 // Therefore, with the above restrictions, (3xx + yy)%12 will always be (3+4)%12 = 7
 #[inline]
-fn func_b_odd_x(field: &mut [bool], xx3: uint, max_y: uint) {
+fn func_b_odd_x(field: &mut Bitv, xx3: uint, max_y: uint) {
     for y in range_step(2, max_y + 1, 6) {
         func_b(field, xx3, y);
     }
@@ -290,7 +290,7 @@ fn func_b_odd_x(field: &mut [bool], xx3: uint, max_y: uint) {
 // For all y where y%2 == 1 and y%3 != 0, (yy)%12 = 1
 // Therefore, with the above restrictions, (3xx - yy)%12 will always be (0-1)%12 = 11
 #[inline]
-fn func_c_even_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
+fn func_c_even_x(field: &mut Bitv, xx3: uint, min_y: uint, max_y: uint) {
     let next_mod_6_r_1 = min_y + ((7 - (min_y % 6)) % 6);
     let next_mod_6_r_5 = min_y + ((11 - (min_y % 6)) % 6);
 
@@ -308,7 +308,7 @@ fn func_c_even_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
 // For all y where y%2 == 0 and y%3 != 0, (yy)%12 = 4
 // Therefore, with the above restrictions, (3xx - yy)%12 will always be (3-4)%12 = 11
 #[inline]
-fn func_c_odd_x(field: &mut [bool], xx3: uint, min_y: uint, max_y: uint) {
+fn func_c_odd_x(field: &mut Bitv, xx3: uint, min_y: uint, max_y: uint) {
     let next_mod_6_r_2 = min_y + ((8 - (min_y % 6)) % 6);
     let next_mod_6_r_4 = min_y + ((10 - (min_y % 6)) % 6);
 
@@ -333,13 +333,12 @@ pub fn erat(limit: uint) -> Vec<uint> {
     }
 
     // Create a vector of 'true' values, one for each number up to limit, exclusive.
-    let mut fixed_field = Vec::from_elem(limit, true);
-    let field = fixed_field.as_mut_slice();
+    let mut field = Bitv::new(limit, true);
 
     // Set all even numbers (apart from 2) to false. Strictly, 0 and 1 should be false
     // also, but the loop ignores everything below index 3 so it doesn't matter.
-    mark_multiples_false(field, limit, 2);
-    mark_multiples_false(field, limit, 3);
+    mark_multiples_false(&mut field, limit, 2);
+    mark_multiples_false(&mut field, limit, 3);
 
     // List of primes found.
     let mut primes = Vec::new();
@@ -364,13 +363,13 @@ pub fn erat(limit: uint) -> Vec<uint> {
         }
 
         // Mark multiples of the new primes as non-prime
-        mark_multiples_false(field, limit, last_prime);
+        mark_multiples_false(&mut field, limit, last_prime);
     }
 
     primes
 }
 
-fn mark_multiples_false(field: &mut [bool], limit: uint, prime: uint) {
+fn mark_multiples_false(field: &mut Bitv, limit: uint, prime: uint) {
     let step = if prime == 2 { 2 } else { prime * 2 };
 
     // Mark multiples of the new primes as non-prime
