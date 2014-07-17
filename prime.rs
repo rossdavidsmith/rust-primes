@@ -21,7 +21,9 @@ pub fn atkin(limit: uint) -> Vec<uint> {
     // }
 
     // initialize the sieve
+    //let mut field = Vec::from_elem(limit, false);
     let mut field = Bitv::new(limit, false);
+
     let limit_inclusive = (limit - 1) as f32;
 
     // put in candidate primes: 
@@ -143,7 +145,7 @@ pub fn atkin(limit: uint) -> Vec<uint> {
 
     // eliminate composites by sieving
     for n in range(5, limit_sqrt) {
-        if !field[n] {
+        if !get(&mut field, n) {
             continue;
         }
 
@@ -151,7 +153,7 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         // sufficient because composites which managed to get
         // on the list cannot be square-free
         for k in range_step(n*n, limit, n*n) {
-            field[k] = false;
+            set(&mut field, k, false);
         }
     }
 
@@ -159,7 +161,7 @@ pub fn atkin(limit: uint) -> Vec<uint> {
     primes.push(2);
     primes.push(3);
     for n in range(5, limit) {
-        if !field[n] {
+        if !get(&mut field, n) {
             continue;
         }
 
@@ -214,13 +216,26 @@ fn max(a: f32, b: f32) -> f32 {
     a.max(b)
 }
 
+fn toggle(field: &mut Bitv, n: uint) {
+    let new_value = !get(field, n);
+    set(field, n, new_value);
+}
+
+fn get(field: &mut Bitv, n: uint) -> bool {
+    field.get(n)
+}
+
+fn set(field: &mut Bitv, n: uint, value: bool) {
+    field.set(n, value);
+}
+
 // Toggles solutions of n = 4x^2 + y^2.
 // n must always satisfy n%12 = 1 or n%12 = 5
 #[inline]
 fn func_a(field: &mut Bitv, xx4: uint, y: uint) {
     let yy = y*y;
     let n = xx4 + yy;
-    field[n] = !field[n];
+    toggle(field, n);
 }
 
 // Toggles solutions of n = 3x^2 + y^2.
@@ -229,7 +244,7 @@ fn func_a(field: &mut Bitv, xx4: uint, y: uint) {
 fn func_b(field: &mut Bitv, xx3: uint, y: uint) {
     let yy = y*y;
     let n = xx3 + yy;
-    field[n] = !field[n];
+    toggle(field, n);
 }
 
 // Toggles solutions of n = 3x^2 - y^2.
@@ -238,7 +253,7 @@ fn func_b(field: &mut Bitv, xx3: uint, y: uint) {
 fn func_c(field: &mut Bitv, xx3: uint, y: uint) {
     let yy = y*y;
     let n = xx3 - yy;
-    field[n] = !field[n];
+    toggle(field, n);
 }
 
 // Toggles all solutions of 4x^2 + y^2 where x is not divisible by 3 and y is odd.
@@ -333,12 +348,13 @@ pub fn erat(limit: uint) -> Vec<uint> {
     }
 
     // Create a vector of 'true' values, one for each number up to limit, exclusive.
-    let mut field = Bitv::new(limit, true);
+    let mut fixed_field = Vec::from_elem(limit, true);
+    let field = fixed_field.as_mut_slice();
 
     // Set all even numbers (apart from 2) to false. Strictly, 0 and 1 should be false
     // also, but the loop ignores everything below index 3 so it doesn't matter.
-    mark_multiples_false(&mut field, limit, 2);
-    mark_multiples_false(&mut field, limit, 3);
+    mark_multiples_false(field, limit, 2);
+    mark_multiples_false(field, limit, 3);
 
     // List of primes found.
     let mut primes = Vec::new();
@@ -363,13 +379,13 @@ pub fn erat(limit: uint) -> Vec<uint> {
         }
 
         // Mark multiples of the new primes as non-prime
-        mark_multiples_false(&mut field, limit, last_prime);
+        mark_multiples_false(field, limit, last_prime);
     }
 
     primes
 }
 
-fn mark_multiples_false(field: &mut Bitv, limit: uint, prime: uint) {
+fn mark_multiples_false(field: &mut [bool], limit: uint, prime: uint) {
     let step = if prime == 2 { 2 } else { prime * 2 };
 
     // Mark multiples of the new primes as non-prime
