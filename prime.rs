@@ -2,8 +2,13 @@
 #![crate_type = "lib"]
 
 extern crate collections;
+
 use collections::bitv::Bitv;
 use std::iter::range_step;
+use std::num::pow;
+use square_multiples::MultiplesOfSquares;
+
+pub mod square_multiples;
 
 pub fn atkin(limit: uint) -> Vec<uint> {
     // Return early for values less than 4. 
@@ -16,10 +21,6 @@ pub fn atkin(limit: uint) -> Vec<uint> {
         return primes
     }
 
-    // if limit < 300 {
-    //     return erat(limit);
-    // }
-
     // initialize the sieve
     //let mut field = Vec::from_elem(limit, false);
     let mut field = Bitv::new(limit, false);
@@ -30,118 +31,68 @@ pub fn atkin(limit: uint) -> Vec<uint> {
     // integers which have an odd number of
     // representations by certain quadratic forms
 
-    ////////////////////////////////
-    // x values from 1 func_a_x_max.
-    ////////////////////////////////
-    let func_a_x_max = (limit_inclusive / 4f32).sqrt().ceil() as uint;
-
-    for x in range_step(1, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    ///////////////////////////////////////////////
+    // Toggles solutions of n = 4x^2 + y^2 (func_a)
+    ///////////////////////////////////////////////
+    for xx4 in MultiplesOfSquares::new(1, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_b_odd_x(&mut field, xx3, max_y_b);
-        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
-    for x in range_step(2, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    for xx4 in MultiplesOfSquares::new(2, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
-    for x in range_step(3, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    for xx4 in MultiplesOfSquares::new(3, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_b_odd_x(&mut field, xx3, max_y_b);
-        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
-    for x in range_step(4, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    for xx4 in MultiplesOfSquares::new(4, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
 
-    for x in range_step(5, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    for xx4 in MultiplesOfSquares::new(5, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_not_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_b_odd_x(&mut field, xx3, max_y_b);
-        func_c_odd_x(&mut field, xx3, min_y_c, x);
     }
 
-    for x in range_step(6, func_a_x_max, 6) {
-        let xx = x*x;
-        let xx3 = 3*xx;
-        let xx4 = 4*xx;
+    for xx4 in MultiplesOfSquares::new(6, 4, 6, limit_inclusive as uint) {
         let max_y_a = max_y_for_func_a(limit_inclusive, xx4);
-        let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
         func_a_x_divisible_by_3(&mut field, xx4, max_y_a+1);
-        func_c_even_x(&mut field, xx3, min_y_c, x);
     }
-
 
     //////////////////////////////////////////////
-    // x values from func_a_x_max to func_b_x_max.
+    // x values from 1 to func_b_x_max.
     //////////////////////////////////////////////
     let func_b_x_max = (limit_inclusive / 3f32).sqrt().ceil() as uint;
+    let func_b_limit = pow(func_b_x_max, 2) * 3;
 
-    for x in range_step(round_to_next_odd(func_a_x_max), func_b_x_max, 2) {
-        let xx3 = 3*x*x;
+    for xx3 in MultiplesOfSquares::new(1, 3, 2, func_b_limit) {
         let max_y_b = max_y_for_func_b(limit_inclusive, xx3);
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
 
         func_b_odd_x(&mut field, xx3, max_y_b);
-        func_c_odd_x(&mut field, xx3, min_y_c, x);
+        func_c_odd_x(&mut field, xx3, min_y_c, sqrt(xx3 as f32/3.0) as uint);
     }
-
 
     ////////////////////////////////////////////
     // x values from func_b_x_max to limit_sqrt.
     ////////////////////////////////////////////
     let limit_sqrt = (limit as f32).sqrt().ceil() as uint;
+    let blah =  pow(limit_sqrt, 2) * 3;
 
-    for x in range_step(round_to_next_odd(func_b_x_max), limit_sqrt, 2) {
-        let xx3 = 3*x*x;
+    for xx3 in MultiplesOfSquares::new(round_to_next_odd(func_b_x_max), 3, 2, blah) {
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
-        func_c_odd_x(&mut field, xx3, min_y_c, x);
+        func_c_odd_x(&mut field, xx3, min_y_c, sqrt(xx3 as f32/3.0) as uint);
     }
 
-    for x in range_step(round_to_next_even(func_a_x_max), limit_sqrt, 2) {
-        let xx3 = 3*x*x;
+    for xx3 in MultiplesOfSquares::new(2, 3, 2, blah) {
         let min_y_c = min_y_for_func_c(limit_inclusive, xx3);
-
-        func_c_even_x(&mut field, xx3, min_y_c, x);
+        func_c_even_x(&mut field, xx3, min_y_c, sqrt(xx3 as f32/3.0) as uint);
     }
-
 
     // eliminate composites by sieving
     for n in range(5, limit_sqrt) {
@@ -169,13 +120,6 @@ pub fn atkin(limit: uint) -> Vec<uint> {
     }
 
     primes
-}
-
-// Rounds up n to the nearest even number.
-// Returns n   if n%2 == 0
-// Returns n+1 if n%2 == 1
-fn round_to_next_even(n: uint) -> uint {
-    if n%2 == 0 {n} else {n+1}
 }
 
 // Rounds up n to the nearest even number.
